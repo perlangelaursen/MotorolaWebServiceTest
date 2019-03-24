@@ -10,10 +10,11 @@ class Radios(tag : Tag) extends Table[(Int, String, Option[String])](tag, "RADIO
 }
 
 class Locations(tag : Tag) extends Table[(Int, String)](tag, "LOCATIONS") {
-  def id : Rep[Int] = column[Int]("RADIOID", O.PrimaryKey)
-  def location : Rep[String] = column[String]("LOCATION", O.PrimaryKey)
+  def id : Rep[Int] = column[Int]("RADIOID")
+  def location : Rep[String] = column[String]("LOCATION")
 
   def * : ProvenShape[(Int, String)] = (id, location)
+  def pk = primaryKey("PK_LOC", (id, location))
   def radio : ForeignKeyQuery[Radios, (Int, String, Option[String])] =
     foreignKey("ID_FK", id, TableQuery[Radios])(_.id)
 }
