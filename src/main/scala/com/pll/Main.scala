@@ -46,7 +46,7 @@ object Main extends App with Directives with JsonSupport {
           post {
             entity(as[Location]) { loc =>
               val checkIfLocationIsValid = locations.filter(_.id == id && _.location == loc)
-              val checkResult = db.run(checkIfLocationIsValid.result)
+              val checkResult = db.run(checkIfLocationIsValid.result).futureValue
               if (checkResult.size == 1) {
                 val updateLocation = radios.filter(_.id == id).map(_.location)
                 val updateAction = updateLocation.update(Some(loc))
@@ -58,7 +58,7 @@ object Main extends App with Directives with JsonSupport {
             }
           } ~ get {
             val findLocation = radios.filter(_.id == id).map(_.location)
-            val findResult = db.run(findLocation.result)
+            val findResult = db.run(findLocation.result).futureValue
             if (findResult.size == 1 && !(findResult.head.isEmpty)) {
               complete(Location(findResult.head.get))
             } else {
