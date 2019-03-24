@@ -56,10 +56,13 @@ object Main extends App with Directives {
         post {
           entity(as[String]) { payload =>
             val radio = JsonMapper.convert[Radio](payload)
-            radios += (id, radio.alias, None)
-            locations ++= (radio.allowed_locations.map((l) => {
-              (id, l)
-            }))
+            val insertAction = DBIO.seq(
+              radios += (id, radio.alias, None),
+              locations ++= (radio.allowed_locations.map((l) => {
+                (id, l)
+              }))
+            )
+            Await.result(db.run(insertAction), Duration.Inf)
             complete(StatusCodes.OK)
           }
         }
@@ -72,17 +75,17 @@ object Main extends App with Directives {
             if (checkResult.size == 1) {
               val updateLocation = radios.filter(_.rad_id === id).map(_.location)
               val updateAction = updateLocation.update(Some(loc.location))
-              db.run(updateAction)
+              Await.result(db.run(updateAction), Duration.Inf)
               complete(StatusCodes.OK)
             } else {
-              complete(403 -> "Forbidden location")
+              complete(403 -> "FORBIDDEN")
             }
           }
         } ~ get {
           val findLocation = radios.filter(_.rad_id === id).map(_.location)
           val findResult = Await.result(db.run(findLocation.result), Duration.Inf)
           if (findResult.size == 1 && !(findResult.head.isEmpty)) {
-            complete(JsonMapper.toJson(Location(findResult.head.get)))
+            complete("OK " + JsonMapper.toJson(Location(findResult.head.get)))
           } else {
             complete(404 -> "NOT FOUND")
           }
